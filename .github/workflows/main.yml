@@ -1,0 +1,37 @@
+name: Build S20+ (G985F) Kernel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache cpio curl flex git libelf-dev libssl-dev python3 zip unzip
+
+      - name: Build Kernel for G985F
+        run: |
+          chmod +x build.sh
+          ./build.sh -m g985f
+          if [ -f mkzip.sh ]; then
+            chmod +x mkzip.sh
+            ./mkzip.sh -m g985f || true
+          fi
+
+      - name: Upload Built Kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: S20Plus-G985F-Kernel
+          path: |
+            **/*.zip
+            out/arch/arm64/boot/Image*
+            arch/arm64/boot/Image*
+          if-no-files-found: warn
